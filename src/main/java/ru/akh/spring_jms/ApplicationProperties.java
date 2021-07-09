@@ -12,14 +12,22 @@ import org.springframework.validation.annotation.Validated;
 public class ApplicationProperties {
 
     @NotEmpty
-    private final String queue;
+    private final String requestQueue;
 
-    public ApplicationProperties(String queue) {
-        this.queue = queue;
+    @NotEmpty
+    private final String responseQueue;
+
+    public ApplicationProperties(String requestQueue, String responseQueue) {
+        this.requestQueue = requestQueue;
+        this.responseQueue = responseQueue;
     }
 
-    public String getQueue() {
-        return queue;
+    public String getRequestQueue() {
+        return requestQueue;
+    }
+
+    public String getResponseQueue() {
+        return responseQueue;
     }
 
 }

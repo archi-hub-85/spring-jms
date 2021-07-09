@@ -5,6 +5,9 @@ public final class ApplicationConstants {
     private ApplicationConstants() {
     }
 
-    public static final String QUEUE_NAME = "MyQueue";
+    public static final String REQUEST_QUEUE = "MyRequestQueue";
+    public static final String RESPONSE_QUEUE = "MyResponseQueue";
+
+    public static final String REQUEST_TYPE_PROPERTY = "RequestType";
 
 }

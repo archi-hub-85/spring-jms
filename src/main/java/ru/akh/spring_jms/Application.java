@@ -4,13 +4,19 @@ import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.Session;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.jms.support.converter.MarshallingMessageConverter;
+import org.springframework.jms.support.converter.MessageConverter;
+import org.springframework.jms.support.converter.MessageType;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.jms.support.destination.DynamicDestinationResolver;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
 import ru.akh.spring_jms.constants.ApplicationConstants;
 
@@ -31,6 +37,17 @@ public class Application {
             return new MyDestinationResolver(appProperties);
         }
 
+        @Bean
+        public MessageConverter messageConverter(@Value("classpath:book.xsd") Resource schemaResource) {
+            Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+            marshaller.setContextPath("ru.akh.spring_jms.schema");
+            marshaller.setSchema(schemaResource);
+
+            MarshallingMessageConverter messageConverter = new MarshallingMessageConverter(marshaller);
+            messageConverter.setTargetType(MessageType.TEXT);
+            return messageConverter;
+        }
+
     }
 
     public static class MyDestinationResolver extends DynamicDestinationResolver {
@@ -43,8 +60,14 @@ public class Application {
 
         @Override
         protected Queue resolveQueue(Session session, String queueName) throws JMSException {
-            if (ApplicationConstants.QUEUE_NAME.equals(queueName)) {
-                queueName = appProperties.getQueue();
+            switch (queueName) {
+            case ApplicationConstants.REQUEST_QUEUE:
+                queueName = appProperties.getRequestQueue();
+                break;
+            case ApplicationConstants.RESPONSE_QUEUE:
+                queueName = appProperties.getResponseQueue();
+                break;
+            default:
             }
 
             return super.resolveQueue(session, queueName);

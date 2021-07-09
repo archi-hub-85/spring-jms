@@ -18,6 +18,7 @@
     <logger name="org.springframework.boot" level="info" />
     <logger name="org.springframework.jms" level="info" />
     <logger name="org.apache.activemq.artemis" level="info" />
+    <logger name="org.apache.activemq.audit" level="off" />
 
     <logger name="ru.akh.spring_jms" level="debug" />
 
