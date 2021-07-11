@@ -25,6 +25,7 @@ import ru.akh.spring_jms.schema.GetTopBooksRequest;
 import ru.akh.spring_jms.schema.GetTopBooksResponse;
 import ru.akh.spring_jms.schema.ObjectFactory;
 import ru.akh.spring_jms.schema.PutContentRequest;
+import ru.akh.spring_jms.schema.PutContentResponse;
 import ru.akh.spring_jms.schema.PutRequest;
 import ru.akh.spring_jms.schema.PutResponse;
 
@@ -101,9 +102,11 @@ public class BookServiceListener {
 
     @JmsListener(destination = ApplicationConstants.REQUEST_QUEUE, selector = ApplicationConstants.REQUEST_TYPE_PROPERTY
             + " = 'PutContentRequest'")
-    public void putContent(PutContentRequest request) {
+    public PutContentResponse putContent(PutContentRequest request) {
         BookContent bookContent = BookContentReadConverter.INSTANCE.convert(request.getContent());
         repository.putContent(bookContent);
+
+        return factory.createPutContentResponse();
     }
 
 }

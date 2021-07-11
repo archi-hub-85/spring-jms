@@ -3,7 +3,11 @@ package ru.akh.spring_jms.sender;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.support.JmsUtils;
 
 import ru.akh.spring_jms.constants.ApplicationConstants;
 import ru.akh.spring_jms.converter.BookContentReadConverter;
@@ -23,6 +27,7 @@ import ru.akh.spring_jms.schema.GetTopBooksRequest;
 import ru.akh.spring_jms.schema.GetTopBooksResponse;
 import ru.akh.spring_jms.schema.ObjectFactory;
 import ru.akh.spring_jms.schema.PutContentRequest;
+import ru.akh.spring_jms.schema.PutContentResponse;
 import ru.akh.spring_jms.schema.PutRequest;
 import ru.akh.spring_jms.schema.PutResponse;
 
@@ -36,18 +41,20 @@ public class BookServiceClient {
         this.template = template;
     }
 
-    private void send(Object request) {
-        template.convertAndSend(ApplicationConstants.REQUEST_QUEUE, request, message -> {
+    @SuppressWarnings("unchecked")
+    private <T> T sendAndReceive(Object request, Class<T> responseClass) {
+        Message responseMessage = template.sendAndReceive(ApplicationConstants.REQUEST_QUEUE, session -> {
+            Message message = template.getMessageConverter().toMessage(request, session);
             message.setStringProperty(ApplicationConstants.REQUEST_TYPE_PROPERTY, request.getClass().getSimpleName());
             return message;
         });
-    }
 
-    private <T> T sendAndReceive(Object request, Class<T> responseClass) {
-        send(request);
-
-        @SuppressWarnings("unchecked")
-        T response = (T) template.receiveAndConvert(ApplicationConstants.RESPONSE_QUEUE);
+        T response;
+        try {
+            response = (T) template.getMessageConverter().fromMessage(responseMessage);
+        } catch (JMSException e) {
+            throw JmsUtils.convertJmsAccessException(e);
+        }
 
         return response;
     }
@@ -97,7 +104,7 @@ public class BookServiceClient {
         PutContentRequest request = factory.createPutContentRequest();
         request.setContent(BookContentWriteConverter.INSTANCE.convert(content));
 
-        send(request);
+        sendAndReceive(request, PutContentResponse.class);
     }
 
 }
